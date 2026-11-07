@@ -370,9 +370,18 @@
                         <button type="button" id="seven12-ocr-btn" onclick="runSeven12OCR()" class="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold rounded-lg"><i class="fa-solid fa-eye mr-1"></i> Scanned PDF OCR चालवा</button>
                         <span id="pdf-import-status" class="text-xs text-cyan-300">PDF निवडलेली नाही.</span>
                     </div>
+                    <div class="glass-panel rounded-xl p-3 space-y-2">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <h3 class="text-xs font-bold text-amber-300"><i class="fa-solid fa-file-image mr-1"></i> मूळ ७/१२ नकाशा / उतारा Preview</h3>
+                            <span class="text-[11px] text-slate-400">मूळ PDF चे स्वरूप जसेच्या तसे दिसेल</span>
+                        </div>
+                        <div id="seven12-pdf-preview" class="space-y-4 max-h-[720px] overflow-auto rounded-lg bg-slate-900 p-2">
+                            <p class="text-xs text-slate-500 text-center py-8">७/१२ PDF निवडल्यानंतर मूळ पानांचा Preview येथे दिसेल.</p>
+                        </div>
+                    </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="space-y-3">
-                            <h3 class="text-xs font-bold text-cyan-400">PDF मधून मिळालेला मजकूर</h3>
+                            <h3 class="text-xs font-bold text-cyan-400">PDF मधून मिळालेला मजकूर (OCR)</h3>
                             <textarea id="seven12-extracted-text" rows="14" placeholder="PDF मधील मजकूर येथे दिसेल..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-200"></textarea>
                             <p class="text-[11px] text-amber-300">OCR सुविधा: selectable text नसलेल्या स्कॅन PDF साठी “Scanned PDF OCR चालवा” दाबा. मराठी + इंग्रजी OCR वापरले जाईल. OCR मधील चुका मूळ 7/12 पाहून दुरुस्त करा.</p>
                         </div>
@@ -1232,6 +1241,32 @@
             reader.readAsArrayBuffer(file);
         }
 
+        async function renderSeven12OriginalPreview(pdf) {
+            const host = document.getElementById('seven12-pdf-preview');
+            if (!host || !pdf) return;
+            host.innerHTML = '';
+            for (let pageNo = 1; pageNo <= pdf.numPages; pageNo++) {
+                const page = await pdf.getPage(pageNo);
+                const baseViewport = page.getViewport({ scale: 1 });
+                const maxWidth = Math.min(host.clientWidth - 24 || 760, 900);
+                const scale = Math.max(0.7, Math.min(1.6, maxWidth / baseViewport.width));
+                const viewport = page.getViewport({ scale });
+                const wrap = document.createElement('div');
+                wrap.className = 'bg-white rounded-md p-1 shadow-lg';
+                const label = document.createElement('div');
+                label.className = 'text-[10px] text-slate-500 px-2 py-1';
+                label.textContent = 'मूळ ७/१२ पान ' + pageNo + ' / ' + pdf.numPages;
+                const canvas = document.createElement('canvas');
+                canvas.className = 'block mx-auto max-w-full h-auto';
+                canvas.width = Math.ceil(viewport.width);
+                canvas.height = Math.ceil(viewport.height);
+                wrap.appendChild(label);
+                wrap.appendChild(canvas);
+                host.appendChild(wrap);
+                await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+            }
+        }
+
         async function extractSeven12PDF(event) {
             const file = event.target.files && event.target.files[0];
             if (!file) return;
@@ -1247,6 +1282,7 @@
                 status.textContent = 'PDF वाचत आहे...';
                 const buffer = await file.arrayBuffer();
                 const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(buffer) }).promise;
+                await renderSeven12OriginalPreview(pdf);
                 let pages = [];
                 for (let pageNo = 1; pageNo <= pdf.numPages; pageNo++) {
                     const page = await pdf.getPage(pageNo);
@@ -1290,6 +1326,7 @@
                     const buffer = await file.arrayBuffer();
                     pdf = await pdfjsLib.getDocument({ data: new Uint8Array(buffer) }).promise;
                 }
+                await renderSeven12OriginalPreview(pdf);
                 status.textContent = 'OCR engine सुरू होत आहे (मराठी + इंग्रजी)...';
                 worker = await Tesseract.createWorker('mar+eng', 1, {
                     logger: m => {
@@ -1407,6 +1444,7 @@
                 if (el) el.value = '';
             });
             document.getElementById('pdf-status').value = 'PDF Imported - Verify';
+            document.getElementById('seven12-pdf-preview').innerHTML = '<p class="text-xs text-slate-500 text-center py-8">७/१२ PDF निवडल्यानंतर मूळ पानांचा Preview येथे दिसेल.</p>';
             document.getElementById('pdf-import-status').textContent = 'PDF निवडलेली नाही.';
         }
 
