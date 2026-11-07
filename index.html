@@ -1,0 +1,1444 @@
+<!DOCTYPE html>
+<html lang="mr" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JM Prime Infratech LLP (JM Prime Infratech LLP)</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        darkbg: '#070a12',
+                        cardbg: '#0f172a',
+                        panelbg: '#1e293b',
+                        bordercolor: '#334155',
+                        accentcyan: '#06b6d4',
+                        accentemerald: '#10b981',
+                        accentamber: '#f59e0b',
+                        accentrose: '#f43f5e',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'Noto Sans Devanagari', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts for Marathi & English -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- SheetJS CDN for Excel Processing -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- PDF.js for 7/12 PDF text extraction and page rendering -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <!-- Tesseract.js OCR: Marathi + English scanned PDF recognition -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
+    <!-- Leaflet CSS & JS for Live Satellite Map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Leaflet Omnivore for KML Parsing -->
+    <script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-omnivore/v0.2.0/leaflet-omnivore.min.js'></script>
+    <!-- Shapefile (.zip) Parser CDN -->
+    <script src="https://unpkg.com/shpjs@latest/dist/shp.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans Devanagari', sans-serif;
+            background-color: #c5702e;
+            color: #e84848;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #b489a2;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #acbfda;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #06b6d4;
+        }
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(51, 65, 85, 0.6);
+        }
+    </style>
+</head>
+<body class="bg-[#070a12] text-slate-100 min-h-screen flex flex-col selection:bg-cyan-500 selection:text-slate-950">
+
+    <!-- LOGIN MODAL -->
+    <div id="login-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 backdrop-blur-md">
+        <div class="glass-panel rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl relative overflow-hidden border border-slate-800">
+            <div class="absolute -top-12 -right-12 w-40 h-40 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute -bottom-12 -left-12 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+            
+            <div class="text-center mb-6">
+                <div class="inline-flex p-3 bg-cyan-500/10 border border-cyan-500/30 rounded-2xl text-cyan-400 mb-3 shadow-inner">
+                    <i class="fa-solid fa-shield-halved text-3xl"></i>
+                </div>
+                <h2 class="text-2xl font-bold bg-gradient-to-r from-cyan-400 via-teal-300 to-emerald-400 bg-clip-text text-transparent">
+                    सुरक्षित लॉगिन Portal
+                </h2>
+                <p class="text-xs text-slate-400 mt-1">JM Prime Infratech LLP</p>
+            </div>
+
+            <form onsubmit="handleLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1.5">युझर आयडी (User ID)</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-user-gear absolute left-3.5 top-3.5 text-slate-500 text-sm"></i>
+                        <input type="text" id="login-username" required value="admin" class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-cyan-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1.5">पासवर्ड (Password)</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-lock absolute left-3.5 top-3.5 text-slate-500 text-sm"></i>
+                        <input type="password" id="login-password" required value="admin123" class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-cyan-500">
+                    </div>
+                </div>
+
+                <div id="login-error" class="text-xs text-rose-400 text-center hidden font-medium bg-rose-500/10 p-2 rounded-lg border border-rose-500/20">
+                    <i class="fa-solid fa-circle-exclamation mr-1"></i> चुकीचा युझर आयडी किंवा पासवर्ड!
+                </div>
+
+                <button type="submit" class="w-full py-3 bg-gradient-to-r from-cyan-500 via-teal-500 to-emerald-500 hover:opacity-95 text-slate-950 font-bold text-sm rounded-xl shadow-lg shadow-cyan-500/20 transition-all flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-right-to-bracket"></i>
+                    <span>लॉगिन करा (Access Dashboard)</span>
+                </button>
+            </form>
+
+            <div class="mt-6 pt-4 border-t border-slate-800 text-center text-[11px] text-slate-400 flex justify-between items-center px-2">
+                <span>Default Creds:</span>
+                <span class="font-mono text-cyan-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">admin / admin123</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN DASHBOARD WRAPPER -->
+    <div id="main-app-content" class="flex flex-col flex-1 opacity-0 pointer-events-none transition-opacity duration-500">
+        
+        <!-- TOP EXECUTIVE HEADER -->
+        <header class="bg-slate-900/90 backdrop-blur-md border-b border-slate-800 sticky top-0 z-40">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-16">
+                    <div class="flex items-center space-x-3">
+                        <div class="p-2.5 bg-gradient-to-br from-cyan-500/20 to-emerald-500/20 border border-cyan-500/40 rounded-xl text-cyan-400 shadow-inner">
+                            <i class="fa-solid fa-map-location-dot text-xl sm:text-2xl"></i>
+                        </div>
+                        <div>
+                            <h1 class="text-base sm:text-lg font-bold bg-gradient-to-r from-cyan-400 via-teal-300 to-emerald-400 bg-clip-text text-transparent">
+                                JM Prime Infratech LLP
+                            </h1>
+                            <p class="text-[11px] text-slate-400 hidden sm:block">Executive Land Survey & Due Diligence Platform</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center space-x-2 sm:space-x-3">
+                        <input type="file" id="excel-file-input" accept=".xlsx, .xls, .csv" class="hidden" onchange="handleExcelImport(event)">
+                        
+                        <button onclick="triggerExcelImport()" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-400 border border-cyan-500/30 flex items-center space-x-1.5 transition-all">
+                            <i class="fa-solid fa-file-import"></i>
+                            <span class="hidden md:inline">Import Excel</span>
+                        </button>
+
+                        <button onclick="exportDataCSV()" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/40 flex items-center space-x-1.5 transition-all">
+                            <i class="fa-solid fa-file-excel"></i>
+                            <span class="hidden md:inline">Export CSV</span>
+                        </button>
+                        
+                        <button onclick="resetToSampleData()" title="Reset Sample Data" class="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-all">
+                            <i class="fa-solid fa-rotate-right text-cyan-400"></i>
+                        </button>
+
+                        <div class="h-6 w-px bg-slate-800 mx-1"></div>
+
+                        <button onclick="handleLogout()" title="Logout System" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 transition-all flex items-center space-x-1">
+                            <i class="fa-solid fa-power-off"></i>
+                            <span class="hidden sm:inline">Logout</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- NAVIGATION TABS -->
+                <nav class="flex space-x-1 border-t border-slate-800/80 pt-2 pb-1 overflow-x-auto text-xs font-medium">
+                    <button onclick="switchTab('dashboard')" id="tab-dashboard" class="tab-btn active px-3.5 py-2 rounded-lg transition-all flex items-center space-x-2 bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 whitespace-nowrap">
+                        <i class="fa-solid fa-square-plus"></i>
+                        <span>नवी नोंदणी व 7/12 टूल</span>
+                    </button>
+                    <button onclick="switchTab('pdf-import')" id="tab-pdf-import" class="tab-btn px-3.5 py-2 rounded-lg transition-all flex items-center space-x-2 text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 whitespace-nowrap">
+                        <i class="fa-solid fa-file-pdf text-rose-400"></i>
+                        <span>7/12 PDF Import</span>
+                    </button>
+                    <button onclick="switchTab('input-table')" id="tab-input-table" class="tab-btn px-3.5 py-2 rounded-lg transition-all flex items-center space-x-2 text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 whitespace-nowrap">
+                        <i class="fa-solid fa-table-list"></i>
+                        <span>Input Master Table</span>
+                    </button>
+                    <button onclick="switchTab('output-table')" id="tab-output-table" class="tab-btn px-3.5 py-2 rounded-lg transition-all flex items-center space-x-2 text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 whitespace-nowrap">
+                        <i class="fa-solid fa-chart-line"></i>
+                        <span>Output Processing</span>
+                    </button>
+                    <button onclick="switchTab('kml-viewer')" id="tab-kml-viewer" class="tab-btn px-3.5 py-2 rounded-lg transition-all flex items-center space-x-2 text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 whitespace-nowrap">
+                        <i class="fa-solid fa-earth-asia text-cyan-400"></i>
+                        <span>Live Satellite & GIS Map</span>
+                    </button>
+                    <button onclick="switchTab('checklist')" id="tab-checklist" class="tab-btn px-3.5 py-2 rounded-lg transition-all flex items-center space-x-2 text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 whitespace-nowrap">
+                        <i class="fa-solid fa-list-check text-amber-400"></i>
+                        <span>डॉक्युमेंट चेकलिस्ट</span>
+                    </button>
+                    <button onclick="switchTab('team-hierarchy')" id="tab-team-hierarchy" class="tab-btn px-3.5 py-2 rounded-lg transition-all flex items-center space-x-2 text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 whitespace-nowrap">
+                        <i class="fa-solid fa-sitemap text-emerald-400"></i>
+                        <span>Team & Roles</span>
+                    </button>
+                    <button onclick="switchTab('admin-panel')" id="tab-admin-panel" class="tab-btn px-3.5 py-2 rounded-lg transition-all flex items-center space-x-2 text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 whitespace-nowrap">
+                        <i class="fa-solid fa-user-shield text-indigo-400"></i>
+                        <span>Admin Control</span>
+                    </button>
+                </nav>
+            </div>
+        </header>
+
+        <!-- MAIN CONTENT AREA -->
+        <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+            <!-- EXECUTIVE KPI SUMMARY CARDS -->
+            <section class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="glass-panel rounded-2xl p-4 flex items-center justify-between shadow-lg">
+                    <div>
+                        <p class="text-[11px] font-medium text-slate-400 uppercase tracking-wider">एकूण सर्वे (Parcels)</p>
+                        <p id="widget-total-surveys" class="text-2xl sm:text-3xl font-extrabold text-cyan-400 mt-1">0</p>
+                    </div>
+                    <div class="p-3 bg-cyan-500/10 border border-cyan-500/30 rounded-xl text-cyan-400">
+                        <i class="fa-solid fa-draw-polygon text-xl"></i>
+                    </div>
+                </div>
+
+                <div class="glass-panel rounded-2xl p-4 flex items-center justify-between shadow-lg">
+                    <div>
+                        <p class="text-[11px] font-medium text-slate-400 uppercase tracking-wider">एकूण क्षेत्र (Total Area)</p>
+                        <p id="widget-total-area" class="text-2xl sm:text-3xl font-extrabold text-emerald-400 mt-1">0 <span class="text-xs font-normal text-slate-400">Ha</span></p>
+                    </div>
+                    <div class="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-400">
+                        <i class="fa-solid fa-vector-square text-xl"></i>
+                    </div>
+                </div>
+
+                <div class="glass-panel rounded-2xl p-4 flex items-center justify-between shadow-lg">
+                    <div>
+                        <p class="text-[11px] font-medium text-slate-400 uppercase tracking-wider">न्यायालयीन वाद (Litigation)</p>
+                        <p id="widget-litigations" class="text-2xl sm:text-3xl font-extrabold text-rose-400 mt-1">0</p>
+                    </div>
+                    <div class="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-400">
+                        <i class="fa-solid fa-gavel text-xl"></i>
+                    </div>
+                </div>
+
+                <div class="glass-panel rounded-2xl p-4 flex items-center justify-between shadow-lg">
+                    <div>
+                        <p class="text-[11px] font-medium text-slate-400 uppercase tracking-wider">GIS/KML Ready</p>
+                        <p id="widget-kml-ready" class="text-2xl sm:text-3xl font-extrabold text-amber-400 mt-1">0</p>
+                    </div>
+                    <div class="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-amber-400">
+                        <i class="fa-solid fa-layer-group text-xl"></i>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SEARCH BAR & LITIGATION FILTER -->
+            <div class="glass-panel rounded-2xl p-3.5 flex flex-col md:flex-row items-center justify-between gap-3">
+                <div class="relative w-full md:w-96">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-500 text-sm"></i>
+                    <input type="text" id="global-search" oninput="applyFilters()" placeholder="शोधा: सर्वे नंबर, धाराकाचे नाव, किंवा गाव..." class="w-full bg-slate-950/80 border border-slate-800 rounded-xl pl-10 pr-4 py-2 text-xs sm:text-sm text-slate-200 focus:outline-none focus:border-cyan-500">
+                </div>
+                
+                <div class="flex items-center space-x-3 w-full md:w-auto justify-end">
+                    <span class="text-xs text-slate-400 font-medium whitespace-nowrap"><i class="fa-solid fa-filter text-cyan-400 mr-1"></i> फिल्टर:</span>
+                    <select id="litigation-filter" onchange="applyFilters()" class="bg-slate-950 border border-slate-800 text-slate-200 text-xs sm:text-sm rounded-xl px-3 py-2 focus:outline-none focus:border-cyan-500">
+                        <option value="ALL">All Records (सर्व)</option>
+                        <option value="YES">Red Litigation Only (न्यालयीन वाद)</option>
+                        <option value="NO">Clear / Non-Litigated (वाद नाही)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- TAB 1: DASHBOARD & INPUT FORM SECTION -->
+            <section id="section-dashboard" class="tab-content space-y-6">
+                <div class="glass-panel rounded-2xl p-5 shadow-xl border border-slate-800 relative">
+                    <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-5">
+                        <h2 class="text-sm font-bold text-emerald-400 flex items-center space-x-2">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                            <span id="form-title">नवीन ७/१२ नोंदणी प्रविष्टी (Add Land Input Record)</span>
+                        </h2>
+                        <button onclick="clearForm()" class="text-xs text-slate-400 hover:text-slate-200">Clear Form</button>
+                    </div>
+
+                    <form id="record-form" onsubmit="handleFormSubmit(event)" class="space-y-4">
+                        <input type="hidden" id="edit-index" value="-1">
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-300 mb-1">अ क्र (Sr. No.)</label>
+                                <input type="number" id="input-srno" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-300 mb-1">जिल्हा (District)</label>
+                                <input type="text" id="input-district" required placeholder="उदा. ठाणे" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-300 mb-1">तालुका (Taluka)</label>
+                                <input type="text" id="input-taluka" required placeholder="उदा. कल्याण" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-300 mb-1">गाव (Village)</label>
+                                <input type="text" id="input-village" required placeholder="उदा. उंबर्ली" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-300 mb-1">सर्वे नंबर (Survey/Gat No)</label>
+                                <input type="text" id="input-surveyno" required placeholder="उदा. 124/2" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-300 mb-1">क्षेत्र (Total Area in Ha)</label>
+                                <input type="text" id="input-area" required placeholder="उदा. 1.25 Ha" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-300 mb-1">धाराकाचे नाव (Holder Name)</label>
+                                <input type="text" id="input-holder" required placeholder="खातेदाराचे पूर्ण नाव" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-300 mb-1">Available Area</label>
+                                <input type="text" id="input-availarea" placeholder="उपलब्ध क्षेत्र" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-6 gap-4 p-4 bg-slate-950/60 border border-slate-800 rounded-xl">
+                            <div class="col-span-1 sm:col-span-2">
+                                <label class="block text-xs font-semibold text-slate-300 mb-1">Reference (संदर्भ)</label>
+                                <input type="text" id="input-reference" placeholder="Ref-01" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-rose-400 mb-1">Red Litigation</label>
+                                <select id="input-litigation" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200">
+                                    <option value="No">No (निरंक)</option>
+                                    <option value="Yes">Yes (वादग्रस्त)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-300 mb-1">7/12 Status</label>
+                                <input type="text" id="input-712" placeholder="Verified" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-300 mb-1">Ferfar (फेरफार)</label>
+                                <input type="text" id="input-ferfar" placeholder="फेरफार क्र." class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-300 mb-1">Zone</label>
+                                <input type="text" id="input-zone" placeholder="Residential/Agri" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200">
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end pt-2">
+                            <button type="submit" id="submit-btn" class="px-6 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-bold text-xs sm:text-sm rounded-xl shadow-lg transition-all flex items-center space-x-2">
+                                <i class="fa-solid fa-floppy-disk"></i>
+                                <span>माहिती जतन करा (Save Record)</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- TAB: 7/12 PDF IMPORT -->
+            <section id="section-pdf-import" class="tab-content space-y-4 hidden">
+                <div class="glass-panel rounded-2xl p-5 shadow-xl border border-slate-800 space-y-4">
+                    <div class="pb-3 border-b border-slate-800">
+                        <h2 class="text-sm font-bold text-rose-400"><i class="fa-solid fa-file-pdf mr-2"></i>७/१२ PDF Import व Text Extraction</h2>
+                        <p class="text-xs text-slate-400 mt-1">७/१२ PDF निवडा. PDF मधील मजकूर काढून खालील माहिती तपासा व Master Table मध्ये नोंद करा.</p>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-3">
+                        <input type="file" id="seven12-pdf-file" accept="application/pdf,.pdf" class="block w-full sm:w-auto text-xs text-slate-300 file:mr-3 file:rounded-lg file:border-0 file:bg-rose-600 file:px-4 file:py-2 file:text-xs file:font-bold file:text-white" onchange="extractSeven12PDF(event)">
+                        <button type="button" id="seven12-ocr-btn" onclick="runSeven12OCR()" class="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold rounded-lg"><i class="fa-solid fa-eye mr-1"></i> Scanned PDF OCR चालवा</button>
+                        <span id="pdf-import-status" class="text-xs text-cyan-300">PDF निवडलेली नाही.</span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="space-y-3">
+                            <h3 class="text-xs font-bold text-cyan-400">PDF मधून मिळालेला मजकूर</h3>
+                            <textarea id="seven12-extracted-text" rows="14" placeholder="PDF मधील मजकूर येथे दिसेल..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-200"></textarea>
+                            <p class="text-[11px] text-amber-300">OCR सुविधा: selectable text नसलेल्या स्कॅन PDF साठी “Scanned PDF OCR चालवा” दाबा. मराठी + इंग्रजी OCR वापरले जाईल. OCR मधील चुका मूळ 7/12 पाहून दुरुस्त करा.</p>
+                        </div>
+                        <div class="space-y-3">
+                            <h3 class="text-xs font-bold text-emerald-400">Master Table मध्ये नोंद करण्यासाठी तपशील</h3>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <label class="text-xs text-slate-300">जिल्हा<input id="pdf-district" type="text" placeholder="रायगड" class="mt-1 w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2"></label>
+                                <label class="text-xs text-slate-300">तालुका<input id="pdf-taluka" type="text" placeholder="कर्जत" class="mt-1 w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2"></label>
+                                <label class="text-xs text-slate-300">गाव<input id="pdf-village" type="text" placeholder="गावाचे नाव" class="mt-1 w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2"></label>
+                                <label class="text-xs text-slate-300">गट / सर्वे नंबर<input id="pdf-surveyno" type="text" placeholder="उदा. 64/अ" class="mt-1 w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2"></label>
+                                <label class="text-xs text-slate-300">एकूण क्षेत्र (Ha)<input id="pdf-area" type="text" placeholder="उदा. 1.25" class="mt-1 w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2"></label>
+                                <label class="text-xs text-slate-300">खातेदाराचे नाव<input id="pdf-holder" type="text" placeholder="खातेदाराचे नाव" class="mt-1 w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2"></label>
+                                <label class="text-xs text-slate-300">फेरफार क्रमांक<input id="pdf-ferfar" type="text" placeholder="फेरफार क्र." class="mt-1 w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2"></label>
+                                <label class="text-xs text-slate-300">7/12 स्थिती<input id="pdf-status" type="text" value="PDF Imported - Verify" class="mt-1 w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2"></label>
+                            </div>
+                            <div class="flex flex-wrap gap-2 pt-2">
+                                <button type="button" onclick="suggestSeven12Fields()" class="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold rounded-lg">मजकुरातून सुचवा</button>
+                                <button type="button" onclick="importSeven12Record()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg">Master Table मध्ये Import करा</button>
+                                <button type="button" onclick="clearSeven12Import()" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold rounded-lg">Clear</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 2: INPUT TABLE -->
+            <section id="section-input-table" class="tab-content space-y-4 hidden">
+                <div class="glass-panel rounded-2xl p-4 shadow-xl border border-slate-800 overflow-hidden">
+                    <div class="flex justify-between items-center pb-4 mb-3 border-b border-slate-800">
+                        <h2 class="text-sm font-bold text-cyan-400">इनपुट मास्टर डेटा तक्ता (Inputs Master Data Table)</h2>
+                        <span class="text-xs text-slate-400">एकूण नोंदी: <strong id="input-count-badge" class="text-cyan-400 font-mono">0</strong></span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs text-slate-300 border-collapse">
+                            <thead class="bg-slate-950/90 text-slate-400 uppercase font-semibold border-b border-slate-800">
+                                <tr>
+                                    <th class="p-3">अ क्र</th>
+                                    <th class="p-3">दिनांक</th>
+                                    <th class="p-3">AvailableArea</th>
+                                    <th class="p-3">Total area </th>
+                                    <th class="p-3">SR/GAT No </th>
+                                    <th class="p-3">Refrence Person </th>
+                                    <th class="p-3">जिल्हा</th>
+                                    <th class="p-3">तालुका</th>
+                                    <th class="p-3">गाव</th>
+                                    <th class="p-3">Zone</th>
+                                    <th class="p-3">Planning Authority</th>
+                                    <th class="p-3">Location</th>
+                                    <th class="p-3">Rate</th>
+                                    <th class="p-3">Letigation</th>
+                                    <th class="p-3">Remark</th>
+                                    <th class="p-3 text-center">कृती</th>
+                                </tr>
+                            </thead>
+                            <tbody id="input-table-body" class="divide-y divide-slate-800/60 font-medium"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 3: OUTPUT TABLE -->
+            <section id="section-output-table" class="tab-content space-y-4 hidden">
+                <div class="glass-panel rounded-2xl p-4 shadow-xl border border-slate-800 overflow-hidden">
+                    <div class="flex justify-between items-center pb-4 mb-3 border-b border-slate-800">
+                        <h2 class="text-sm font-bold text-emerald-400">प्रक्रियेत असलेला आउटपुट तक्ता (Processed Output Table)</h2>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs text-slate-300 border-collapse">
+                            <thead class="bg-slate-950/90 text-slate-400 uppercase font-semibold border-b border-slate-800">
+                                <tr>
+                                    <th class="p-3">अ क्र</th>
+                                    <th class="p-3">7/12 Detail</th>
+                                    <th class="p-3">Area (Ha)</th>
+                                    <th class="p-3">Red Litigation</th>
+                                    <th class="p-3">Ferfar</th>
+                                    <th class="p-3">Zone</th>
+                                    <th class="p-3">KML Location</th>
+                                </tr>
+                            </thead>
+                            <tbody id="output-table-body" class="divide-y divide-slate-800/60 font-medium"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 4: LIVE SATELLITE, KML & SHAPEFILE MAP & DWG VIEWER WITH VILLAGE SEARCH -->
+            <section id="section-kml-viewer" class="tab-content space-y-4 hidden">
+                <div class="glass-panel rounded-2xl p-5 shadow-xl border border-slate-800 space-y-4">
+                    <div class="flex flex-col md:flex-row items-start md:items-center justify-between pb-3 border-b border-slate-800 gap-3">
+                        <div>
+                            <h3 class="text-sm font-bold text-amber-400 flex items-center space-x-2">
+                                <i class="fa-solid fa-earth-asia"></i>
+                                <span>Live Google Satellite, KML & Shapefile & DWG Map Viewer</span>
+                            </h3>
+                            <p class="text-xs text-slate-400">गाव किंवा ठिकाण शोधा, KML किंवा Shapefileकिंवा DWG (.shp) अपलोड करा.</p>
+                        </div>
+                        
+                        <!-- SEARCH BAR, KML & SHAPEFILE UPLOADER BUTTONS -->
+                        <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+                            <div class="relative flex-1 md:w-52">
+                                <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-500 text-xs"></i>
+                                <input type="text" id="map-village-search" placeholder="गाव/स्थान शोधा (उदा. पनवेल)..." class="w-full bg-slate-950 border border-slate-800 rounded-lg pl-9 pr-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-500">
+                            </div>
+                            <button onclick="searchVillageOnMap()" class="px-3 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold rounded-lg transition-all flex items-center space-x-1 whitespace-nowrap">
+                                <i class="fa-solid fa-search"></i>
+                                <span>शोधा</span>
+                            </button>
+
+                            <!-- KML Button -->
+                            <label for="kml-file-upload" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg cursor-pointer transition-all flex items-center space-x-1 whitespace-nowrap shadow">
+                                <i class="fa-solid fa-file-arrow-up"></i>
+                                <span>KML</span>
+                            </label>
+                            <input type="file" id="kml-file-upload" accept=".kml" class="hidden" onchange="loadKMLFile(event)">
+
+                            <!-- Shapefile (.zip) Button -->
+                            <!-- dwg/dxf (.dwg) Button -->
+                            <label for="shp-file-upload" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-lg cursor-pointer transition-all flex items-center space-x-1 whitespace-nowrap shadow">
+                                <i class="fa-solid fa-layer-group"></i>
+                                <span>Shapefile (.zip)</span>
+                                <span>DWG (.dwg)</span>
+                            </label>
+                            <input type="file" id="shp-file-upload" accept=".zip" class="hidden" onchange="loadShapefile(event)">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                        <!-- LEAFLET LIVE SATELLITE MAP CONTAINER -->
+                        <div class="lg:col-span-2 bg-slate-950 rounded-xl border border-slate-800 p-2 relative overflow-hidden h-[400px]">
+                            <div id="leaflet-map-container" class="w-full h-full rounded-lg"></div>
+                        </div>
+
+                        <!-- Side Details Panel -->
+                        <div class="bg-slate-950/60 border border-slate-800 rounded-xl p-4 space-y-3">
+                            <h4 class="text-xs font-bold text-cyan-400 uppercase tracking-wider border-b border-slate-800 pb-2">मॅप लेयर माहिती</h4>
+                            <div class="space-y-3 text-xs text-slate-300">
+                                <p class="text-slate-400">गाव सर्च करा किंवा **KML** व **Shapefile Zip (`.zip`)** फाईल निवडून जमिनीची हद्द सॅटेलाइटवर पहा.</p>
+                                <div class="p-3 bg-slate-900 rounded-lg border border-slate-800 space-y-1">
+                                    <p class="text-emerald-400 font-semibold"><i class="fa-solid fa-circle-check"></i> Satellite View Active</p>
+                                    <p class="text-[11px] text-slate-400">Layer: Google Maps Hybrid</p>
+                                </div>
+                                <div id="map-search-status" class="text-[11px] text-cyan-300 italic"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 5: DUE DILIGENCE CHECKLIST -->
+            <section id="section-checklist" class="tab-content space-y-6 hidden">
+                <div class="glass-panel rounded-2xl p-6 shadow-xl border border-slate-800 space-y-6">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 border-b border-slate-800 gap-3">
+                        <div>
+                            <h2 class="text-base font-bold text-amber-400 flex items-center space-x-2">
+                                <i class="fa-solid fa-list-check"></i>
+                                <span>जमीन कागदपत्र पडताळणी चेकलिस्ट (Due Diligence Checklist)</span>
+                            </h2>
+                            <p class="text-xs text-slate-400 mt-0.5">MOU पूर्वी, प्रारंभिक आणि तांत्रिक/कायदेशीर तपासणीचे तपशील</p>
+                        </div>
+                        <button onclick="saveChecklistData()" class="px-5 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-xl shadow-lg transition-all flex items-center space-x-2">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                            <span>चेकलिस्ट सेव्ह करा</span>
+                        </button>
+                    </div>
+
+                    <!-- Header Meta Info Inputs -->
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 bg-slate-950/60 p-4 rounded-xl border border-slate-800">
+                        <div>
+                            <label class="block text-[11px] text-slate-400 mb-1">7/12 No.</label>
+                            <input type="text" id="chk-meta-712" placeholder="7/12 क्र." class="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] text-slate-400 mb-1">क्षेत्र (Area)</label>
+                            <input type="text" id="chk-meta-area" placeholder="क्षेत्र" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] text-slate-400 mb-1">गाव (Village)</label>
+                            <input type="text" id="chk-meta-village" placeholder="गाव" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] text-slate-400 mb-1">एकूण मालक (Owners)</label>
+                            <input type="text" id="chk-meta-owner" placeholder="मालक" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] text-slate-400 mb-1">एजंट (Agent)</label>
+                            <input type="text" id="chk-meta-agent" placeholder="एजंट" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] text-slate-400 mb-1">Class</label>
+                            <input type="text" id="chk-meta-class" placeholder="वर्ग" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200">
+                        </div>
+                    </div>
+
+                    <!-- Checklist Sections Container -->
+                    <div class="space-y-6">
+                        <!-- SECTION 1 -->
+                        <div class="bg-slate-950/60 border border-slate-800 rounded-xl p-4 overflow-hidden">
+                            <h3 class="text-xs sm:text-sm font-bold text-cyan-400 mb-3 bg-cyan-500/10 p-2.5 rounded-lg border border-cyan-500/20">
+                                1. Before MOU - Poornima (CEO-PS)
+                            </h3>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-xs text-slate-300 border-collapse" id="table-sec1">
+                                    <thead class="bg-slate-900 text-slate-400 uppercase font-semibold border-b border-slate-800">
+                                        <tr>
+                                            <th class="p-2.5 w-12 text-center">Sr</th>
+                                            <th class="p-2.5">कागदपत्र / पडताळणी मुद्दा</th>
+                                            <th class="p-2.5 w-20 text-center">आहे</th>
+                                            <th class="p-2.5 w-20 text-center">नाही</th>
+                                            <th class="p-2.5 w-48">शेरा (Remark)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-800/60"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- SECTION 2 -->
+                        <div class="bg-slate-950/60 border border-slate-800 rounded-xl p-4 overflow-hidden">
+                            <h3 class="text-xs sm:text-sm font-bold text-emerald-400 mb-3 bg-emerald-500/10 p-2.5 rounded-lg border border-emerald-500/20">
+                                2. प्रारंभिक तपासणी - Atul (Technical) & Adv. Siddhu (Legal)
+                            </h3>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-xs text-slate-300 border-collapse" id="table-sec2">
+                                    <thead class="bg-slate-900 text-slate-400 uppercase font-semibold border-b border-slate-800">
+                                        <tr>
+                                            <th class="p-2.5 w-12 text-center">Sr</th>
+                                            <th class="p-2.5">तांत्रिक व भौगोलिक तपासणी</th>
+                                            <th class="p-2.5 w-20 text-center">आहे</th>
+                                            <th class="p-2.5 w-20 text-center">नाही</th>
+                                            <th class="p-2.5 w-48">शेरा (Remark)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-800/60"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- SECTION 3 -->
+                        <div class="bg-slate-950/60 border border-slate-800 rounded-xl p-4 overflow-hidden">
+                            <h3 class="text-xs sm:text-sm font-bold text-amber-400 mb-3 bg-amber-500/10 p-2.5 rounded-lg border border-amber-500/20">
+                                3. तांत्रिक आणि कायदेशीर तपासणी - Legal & Field Team (Adv. Siddhu, Dr. Kolekar)
+                            </h3>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-xs text-slate-300 border-collapse" id="table-sec3">
+                                    <thead class="bg-slate-900 text-slate-400 uppercase font-semibold border-b border-slate-800">
+                                        <tr>
+                                            <th class="p-2.5 w-12 text-center">Sr</th>
+                                            <th class="p-2.5">कायदेशीर व करार पडताळणी</th>
+                                            <th class="p-2.5 w-20 text-center">आहे</th>
+                                            <th class="p-2.5 w-20 text-center">नाही</th>
+                                            <th class="p-2.5 w-48">शेरा (Remark)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-800/60"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 6: TEAM HIERARCHY & ROLES -->
+            <section id="section-team-hierarchy" class="tab-content space-y-6 hidden">
+                <div class="glass-panel rounded-2xl p-6 shadow-xl border border-slate-800 space-y-6">
+                    <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+                        <div>
+                            <h2 class="text-lg font-bold text-emerald-400 flex items-center space-x-2">
+                                <i class="fa-solid fa-sitemap"></i>
+                                <span>संघ व कार्यविभाग रचना (Organization Hierarchy & Team Mapping)</span>
+                            </h2>
+                            <p class="text-xs text-slate-400 mt-0.5">Executive Leadership & Key Operational Heads</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div class="bg-slate-950/80 border border-slate-800 p-4 rounded-xl flex items-center space-x-3">
+                            <div class="p-3 bg-cyan-500/10 border border-cyan-500/30 rounded-xl text-cyan-400"><i class="fa-solid fa-user-tie text-xl"></i></div>
+                            <div>
+                                <p class="text-[11px] text-slate-400 uppercase font-semibold">Chief Executive Officer</p>
+                                <p class="text-sm font-bold text-slate-100">CEO - BD</p>
+                            </div>
+                        </div>
+                        <div class="bg-slate-950/80 border border-slate-800 p-4 rounded-xl flex items-center space-x-3">
+                            <div class="p-3 bg-cyan-500/10 border border-cyan-500/30 rounded-xl text-cyan-400"><i class="fa-solid fa-user-tie text-xl"></i></div>
+                            <div>
+                                <p class="text-[11px] text-slate-400 uppercase font-semibold">Chief Executive Officer</p>
+                                <p class="text-sm font-bold text-slate-100">CEO - JS</p>
+                            </div>
+                        </div>
+                        <div class="bg-slate-950/80 border border-slate-800 p-4 rounded-xl flex items-center space-x-3">
+                            <div class="p-3 bg-cyan-500/10 border border-cyan-500/30 rounded-xl text-cyan-400"><i class="fa-solid fa-user-tie text-xl"></i></div>
+                            <div>
+                                <p class="text-[11px] text-slate-400 uppercase font-semibold">Chief Executive Officer</p>
+                                <p class="text-sm font-bold text-slate-100">CEO - PS</p>
+                            </div>
+                        </div>
+                        <div class="bg-slate-950/80 border border-slate-800 p-4 rounded-xl flex items-center space-x-3">
+                            <div class="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-400"><i class="fa-solid fa-user-gear text-xl"></i></div>
+                            <div>
+                                <p class="text-[11px] text-slate-400 uppercase font-semibold">Administration</p>
+                                <p class="text-sm font-bold text-slate-100">Admin - Swapnil</p>
+                            </div>
+                        </div>
+                        <div class="bg-slate-950/80 border border-slate-800 p-4 rounded-xl flex items-center space-x-3">
+                            <div class="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-amber-400"><i class="fa-solid fa-calculator text-xl"></i></div>
+                            <div>
+                                <p class="text-[11px] text-slate-400 uppercase font-semibold">Accounting</p>
+                                <p class="text-sm font-bold text-slate-100">Accounting - ABC</p>
+                            </div>
+                        </div>
+                        <div class="bg-slate-950/80 border border-slate-800 p-4 rounded-xl flex items-center space-x-3">
+                            <div class="p-3 bg-cyan-500/10 border border-cyan-500/30 rounded-xl text-cyan-400"><i class="fa-solid fa-laptop-code text-xl"></i></div>
+                            <div>
+                                <p class="text-[11px] text-slate-400 uppercase font-semibold">Technical & GIS Head</p>
+                                <p class="text-sm font-bold text-slate-100">Technical - Atul</p>
+                            </div>
+                        </div>
+                        <div class="bg-slate-950/80 border border-slate-800 p-4 rounded-xl flex items-center space-x-3">
+                            <div class="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-400"><i class="fa-solid fa-person-hiking text-xl"></i></div>
+                            <div>
+                                <p class="text-[11px] text-slate-400 uppercase font-semibold">Field Operations</p>
+                                <p class="text-sm font-bold text-slate-100">Field Operation - Dr. Kolekar</p>
+                            </div>
+                        </div>
+                        <div class="bg-slate-950/80 border border-slate-800 p-4 rounded-xl flex items-center space-x-3">
+                            <div class="p-3 bg-purple-500/10 border border-purple-500/30 rounded-xl text-purple-400"><i class="fa-solid fa-scale-balanced text-xl"></i></div>
+                            <div>
+                                <p class="text-[11px] text-slate-400 uppercase font-semibold">Legal Counsel</p>
+                                <p class="text-sm font-bold text-slate-100">Legal - Adv. Siddhu</p>
+                            </div>
+                        </div>
+                        <div class="bg-slate-950/80 border border-slate-800 p-4 rounded-xl flex items-center space-x-3">
+                            <div class="p-3 bg-indigo-500/10 border border-indigo-500/30 rounded-xl text-indigo-400"><i class="fa-solid fa-chart-line text-xl"></i></div>
+                            <div>
+                                <p class="text-[11px] text-slate-400 uppercase font-semibold">Marketing Head</p>
+                                <p class="text-sm font-bold text-slate-100">Marketing - CEO</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 7: ADMIN PANEL -->
+            <section id="section-admin-panel" class="tab-content space-y-6 hidden">
+                <div class="glass-panel rounded-2xl p-6 shadow-xl border border-slate-800 space-y-6">
+                    <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+                        <div>
+                            <h2 class="text-lg font-bold text-cyan-400 flex items-center space-x-2">
+                                <i class="fa-solid fa-user-shield"></i>
+                                <span>ॲडमिनिस्ट्रेटर पॅनेल (Admin Security Center)</span>
+                            </h2>
+                            <p class="text-xs text-slate-400 mt-0.5">प्रणाली सुरक्षा आणि पासवर्ड व्यवस्थापन</p>
+                        </div>
+                        <span class="px-3 py-1 bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-xs font-semibold rounded-full font-mono">
+                            Admin - Swapnil
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-slate-950/60 border border-slate-800 p-4 rounded-xl space-y-3">
+                            <h3 class="text-xs font-bold text-cyan-400 uppercase tracking-wider"><i class="fa-solid fa-key mr-1"></i> पासवर्ड बदला</h3>
+                            <form onsubmit="changeAdminPassword(event)" class="space-y-3">
+                                <div>
+                                    <label class="block text-xs text-slate-400 mb-1">नवीन पासवर्ड</label>
+                                    <input type="password" id="admin-new-pass" required placeholder="नवीन पासवर्ड टाका" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200">
+                                </div>
+                                <button type="submit" class="w-full py-2 bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-bold text-xs rounded-lg transition-all">
+                                    पासवर्ड अपडेट करा
+                                </button>
+                            </form>
+                        </div>
+
+                        <div class="bg-slate-950/60 border border-slate-800 p-4 rounded-xl space-y-3 flex flex-col justify-between">
+                            <div>
+                                <h3 class="text-xs font-bold text-rose-400 uppercase tracking-wider"><i class="fa-solid fa-triangle-exclamation mr-1"></i> डेटा रीसेट</h3>
+                                <p class="text-xs text-slate-400 mt-1">सर्व स्थानिक बदल हटवून मूळ नमुना डेटा पुनर्स्थापित करा.</p>
+                            </div>
+                            <button onclick="resetToSampleData()" class="w-full py-2 bg-rose-600/20 hover:bg-rose-600/30 text-rose-400 border border-rose-500/30 font-bold text-xs rounded-lg transition-all">
+                                नमुना डेटा रिस्टोर करा
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-slate-900/95 text-slate-100 border border-cyan-500/50 shadow-2xl rounded-xl px-4 py-3 text-xs flex items-center space-x-3 transition-all duration-300 opacity-0 pointer-events-none z-50">
+        <i class="fa-solid fa-circle-check text-cyan-400 text-lg"></i>
+        <span id="toast-message" class="font-medium">Success Action</span>
+    </div>
+
+    <!-- JAVASCRIPT APP LOGIC -->
+    <script>
+        const INITIAL_DATA = [
+            { srNo: 1, district: "ठाणे", taluka: "कल्याण", village: "उंबर्ली", surveyNo: "124/2", area: "1.25", holder: "सुरेश महादेव पाटील", reference: "REF-01", litigation: "No", detail712: "Verified", ferfar: "1089", zone: "Commercial", reportKml: "Umbarli_124_2.kml" },
+            { srNo: 2, district: "ठाणे", taluka: "कल्याण", village: "उंबर्ली", surveyNo: "125/A", area: "2.10", holder: "रमेश भानुदास गायकवाड", reference: "REF-02", litigation: "Yes", detail712: "Court Stay", ferfar: "1102", zone: "Agri", reportKml: "Umbarli_125_A.kml" }
+        ];
+
+        const checklistSec1Items = [
+            "सातबारा", "जागेचा फेरफार", "गट बुक नकाशा", "Mojani Nakasha", "काही लेटिगेशन आहे का?",
+            "जागेवर बोजा आहे का व तसेच सातबारा वरती अजून काही शेर आहे का", "पजेशन कोणाकडे आहे व पजेशन काही प्रॉब्लेम आहे का?",
+            "प्लॉट शेती (Agri) आहे की NA (Non-Agriculture) आहे?", "TPS Scheme आहे की Non-TPS Scheme आहे?",
+            "TPS Scheme असल्यास आवश्यक कागदपत्रे", "प्लॉटचा लेआऊट / टी.पी. मोजणी नकाशा", "प्रॉपर्टी कार्ड (असल्यास)",
+            "विकास परवानगी / मंजूर नकाशा (बांधकाम असल्यास)", "जागेला कंपाऊंड बांधून दिले जाईल का?", "जागेवर कंपनीचा बोर्ड लावून दिला जाईल का?",
+            "जागेची सरकारी मोजणी करून दिली जाईल का", "जागेची सरकारी /खाजगी मोजणी झाली असल्यास त्याची कागदपत्रे", "प्लॉट NA असल्यास NA सर्टिफिकेट"
+        ];
+
+        const checklistSec2Items = [
+            "सातबारा View wale", "जागेचा फेरफार View wale", "गट बुक नकाशा", "गाव नकाशा", "झोन दाखला", "DP Plan",
+            "जागेची लोकेशन", "Gavthan pasun kiti distance varti? (200/500 m for FSI)", "Type of land?", "Class of Land ? (1/2)",
+            "Near Water source (River, Odha)", "7/12 Remark???", "Land Distance & Timing from Airport?",
+            "जागेला सध्यास्थितीत रोड आहे का? कागदोपत्री रोड आहे का असल्यास किती मीटरचा आहे", "MSRDC Nakasha", "Forest la Lagun ahe ka?", "DMA location"
+        ];
+
+        const checklistSec3Items = [
+            "MOU with Min token", "Private Mojani", "जागेचा व्हिडिओ व फोटोज", "MOU Remaining Amount",
+            "टायटल सर्च रिपोर्ट", "JCB", "Govt Survey", "Pole Fencing", "Sale Deed"
+        ];
+
+        let stateData = [];
+        let lastAutoImported712Text = '';
+        let leafletMap = null;
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const user = document.getElementById('login-username').value.trim();
+            const pass = document.getElementById('login-password').value.trim();
+            const errorDiv = document.getElementById('login-error');
+            const storedPass = localStorage.getItem('admin_pass') || 'admin123';
+
+            if (user === 'admin' && pass === storedPass) {
+                sessionStorage.setItem('isLoggedIn', 'true');
+                document.getElementById('login-modal').classList.add('hidden');
+                document.getElementById('main-app-content').classList.remove('opacity-0', 'pointer-events-none');
+                showToast("लॉगिन यशस्वी झाले!");
+                initApp();
+            } else {
+                errorDiv.classList.remove('hidden');
+            }
+        }
+
+        function handleLogout() {
+            sessionStorage.removeItem('isLoggedIn');
+            location.reload();
+        }
+
+        function checkAuth() {
+            if (sessionStorage.getItem('isLoggedIn') === 'true') {
+                document.getElementById('login-modal').classList.add('hidden');
+                document.getElementById('main-app-content').classList.remove('opacity-0', 'pointer-events-none');
+                initApp();
+            }
+        }
+
+        function initApp() {
+            const saved = localStorage.getItem('land_records_data');
+            stateData = saved ? JSON.parse(saved) : [...INITIAL_DATA];
+            renderData();
+            buildChecklistTables();
+            loadChecklistData();
+        }
+
+        function saveState() {
+            localStorage.setItem('land_records_data', JSON.stringify(stateData));
+            renderData();
+        }
+
+        function buildChecklistTables() {
+            populateTable('table-sec1', checklistSec1Items, 'sec1');
+            populateTable('table-sec2', checklistSec2Items, 'sec2');
+            populateTable('table-sec3', checklistSec3Items, 'sec3');
+        }
+
+        function populateTable(tableId, items, prefix) {
+            const tbody = document.querySelector(`#${tableId} tbody`);
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            items.forEach((item, index) => {
+                const id = `${prefix}_${index}`;
+                tbody.innerHTML += `
+                    <tr class="border-b border-slate-800/60 hover:bg-slate-800/40">
+                        <td class="p-2.5 text-center text-slate-400 font-mono">${index + 1}</td>
+                        <td class="p-2.5 text-slate-200 font-medium">${item}</td>
+                        <td class="p-2.5 text-center"><input type="radio" name="${id}_status" value="yes" class="accent-emerald-500 cursor-pointer"></td>
+                        <td class="p-2.5 text-center"><input type="radio" name="${id}_status" value="no" class="accent-rose-500 cursor-pointer"></td>
+                        <td class="p-2.5"><input type="text" id="${id}_remark" placeholder="शेरा लिहा..." class="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs text-slate-200"></td>
+                    </tr>`;
+            });
+        }
+
+        function saveChecklistData() {
+            const data = {
+                meta: {
+                    no712: document.getElementById('chk-meta-712').value,
+                    area: document.getElementById('chk-meta-area').value,
+                    village: document.getElementById('chk-meta-village').value,
+                    owner: document.getElementById('chk-meta-owner').value,
+                    agent: document.getElementById('chk-meta-agent').value,
+                    cls: document.getElementById('chk-meta-class').value,
+                },
+                sec1: getTableValues(checklistSec1Items.length, 'sec1'),
+                sec2: getTableValues(checklistSec2Items.length, 'sec2'),
+                sec3: getTableValues(checklistSec3Items.length, 'sec3'),
+            };
+            localStorage.setItem('land_checklist_data', JSON.stringify(data));
+            showToast("चेकलिस्ट माहिती सेव्ह झाली!");
+        }
+
+        function getTableValues(length, prefix) {
+            let res = [];
+            for (let i = 0; i < length; i++) {
+                const radios = document.querySelectorAll(`input[name="${prefix}_${i}_status"]:checked`);
+                const status = radios.length > 0 ? radios[0].value : '';
+                const remark = document.getElementById(`${prefix}_${i}_remark`) ? document.getElementById(`${prefix}_${i}_remark`).value : '';
+                res.push({ status, remark });
+            }
+            return res;
+        }
+
+        function loadChecklistData() {
+            const saved = localStorage.getItem('land_checklist_data');
+            if (!saved) return;
+            const data = JSON.parse(saved);
+            if (data.meta) {
+                document.getElementById('chk-meta-712').value = data.meta.no712 || '';
+                document.getElementById('chk-meta-area').value = data.meta.area || '';
+                document.getElementById('chk-meta-village').value = data.meta.village || '';
+                document.getElementById('chk-meta-owner').value = data.meta.owner || '';
+                document.getElementById('chk-meta-agent').value = data.meta.agent || '';
+                document.getElementById('chk-meta-class').value = data.meta.cls || '';
+            }
+            loadTableValues(data.sec1, 'sec1');
+            loadTableValues(data.sec2, 'sec2');
+            loadTableValues(data.sec3, 'sec3');
+        }
+
+        function loadTableValues(secData, prefix) {
+            if (!secData) return;
+            secData.forEach((item, i) => {
+                if (item.status) {
+                    const radio = document.querySelector(`input[name="${prefix}_${i}_status"][value="${item.status}"]`);
+                    if (radio) radio.checked = true;
+                }
+                const remarkInput = document.getElementById(`${prefix}_${i}_remark`);
+                if (remarkInput) remarkInput.value = item.remark || '';
+            });
+        }
+
+        function renderData() {
+            const filterVal = document.getElementById('litigation-filter') ? document.getElementById('litigation-filter').value : 'ALL';
+            const searchVal = document.getElementById('global-search') ? document.getElementById('global-search').value.toLowerCase().trim() : '';
+
+            let filtered = stateData.filter(item => {
+                const matchesFilter = (filterVal === 'ALL') || (filterVal === 'YES' && item.litigation === 'Yes') || (filterVal === 'NO' && item.litigation === 'No');
+                const matchesSearch = !searchVal || 
+                    (item.surveyNo && item.surveyNo.toLowerCase().includes(searchVal)) ||
+                    (item.holder && item.holder.toLowerCase().includes(searchVal)) ||
+                    (item.village && item.village.toLowerCase().includes(searchVal));
+                return matchesFilter && matchesSearch;
+            });
+
+            document.getElementById('widget-total-surveys').innerText = stateData.length;
+            let sumArea = stateData.reduce((acc, cur) => acc + (parseFloat(cur.area) || 0), 0);
+            document.getElementById('widget-total-area').innerHTML = `${sumArea.toFixed(2)} <span class="text-xs font-normal text-slate-400">Ha</span>`;
+            document.getElementById('widget-litigations').innerText = stateData.filter(d => d.litigation === 'Yes').length;
+            document.getElementById('widget-kml-ready').innerText = stateData.length;
+            document.getElementById('input-count-badge').innerText = filtered.length;
+
+            let inputBody = document.getElementById('input-table-body');
+            inputBody.innerHTML = '';
+            let outputBody = document.getElementById('output-table-body');
+            outputBody.innerHTML = '';
+
+            filtered.forEach((d, idx) => {
+                inputBody.innerHTML += `
+                    <tr class="hover:bg-slate-800/40 border-b border-slate-800/40">
+                        <td class="p-3 font-mono text-slate-400">${d.srNo}</td>
+                        <td class="p-3">${d.district}</td>
+                        <td class="p-3">${d.taluka}</td>
+                        <td class="p-3">${d.village}</td>
+                        <td class="p-3 font-semibold text-cyan-400 font-mono">${d.surveyNo}</td>
+                        <td class="p-3">${d.area} Ha</td>
+                        <td class="p-3 font-medium">${d.holder}</td>
+                        <td class="p-3 text-slate-400">${d.reference || '-'}</td>
+                        <td class="p-3 text-center space-x-1">
+                            <button onclick="editRecord(${idx})" class="text-cyan-400 hover:text-cyan-300 p-1"><i class="fa-solid fa-pen-to-square"></i></button>
+                            <button onclick="deleteRecord(${idx})" class="text-rose-400 hover:text-rose-300 p-1"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    </tr>`;
+
+                outputBody.innerHTML += `
+                    <tr class="hover:bg-slate-800/40 border-b border-slate-800/40">
+                        <td class="p-3 font-mono text-slate-400">${d.srNo}</td>
+                        <td class="p-3 font-semibold text-emerald-400">${d.detail712 || 'Verified'}</td>
+                        <td class="p-3 font-mono">${d.area}</td>
+                        <td class="p-3">
+                            <span class="px-2 py-0.5 rounded text-[10px] font-semibold ${d.litigation === 'Yes' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'}">
+                                ${d.litigation === 'Yes' ? 'Red Litigation' : 'Clean'}
+                            </span>
+                        </td>
+                        <td class="p-3">${d.ferfar || '-'}</td>
+                        <td class="p-3">${d.zone || '-'}</td>
+                        <td class="p-3 font-mono text-cyan-400">${d.reportKml || 'Parcel.kml'}</td>
+                    </tr>`;
+            });
+        }
+
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            const editIdx = parseInt(document.getElementById('edit-index').value);
+
+            const newRecord = {
+                srNo: document.getElementById('input-srno').value,
+                district: document.getElementById('input-district').value,
+                taluka: document.getElementById('input-taluka').value,
+                village: document.getElementById('input-village').value,
+                surveyNo: document.getElementById('input-surveyno').value,
+                area: document.getElementById('input-area').value,
+                holder: document.getElementById('input-holder').value,
+                reference: document.getElementById('input-reference').value,
+                litigation: document.getElementById('input-litigation').value,
+                detail712: document.getElementById('input-712').value || "Verified",
+                ferfar: document.getElementById('input-ferfar').value,
+                zone: document.getElementById('input-zone').value,
+                reportKml: "Parcel_" + document.getElementById('input-surveyno').value.replace(/[\/\s]/g, '_') + ".kml"
+            };
+
+            if (editIdx >= 0 && editIdx < stateData.length) {
+                stateData[editIdx] = newRecord;
+                showToast("नोंद यशस्वीरित्या अद्ययावत झाली!");
+            } else {
+                stateData.push(newRecord);
+                showToast("नवीन नोंद जतन झाली!");
+            }
+
+            saveState();
+            clearForm();
+        }
+
+        function editRecord(idx) {
+            const r = stateData[idx];
+            if (!r) return;
+            document.getElementById('edit-index').value = idx;
+            document.getElementById('input-srno').value = r.srNo;
+            document.getElementById('input-district').value = r.district;
+            document.getElementById('input-taluka').value = r.taluka;
+            document.getElementById('input-village').value = r.village;
+            document.getElementById('input-surveyno').value = r.surveyNo;
+            document.getElementById('input-area').value = r.area;
+            document.getElementById('input-holder').value = r.holder;
+            document.getElementById('input-reference').value = r.reference || '';
+            document.getElementById('input-litigation').value = r.litigation;
+            document.getElementById('input-712').value = r.detail712 || '';
+            document.getElementById('input-ferfar').value = r.ferfar || '';
+            document.getElementById('input-zone').value = r.zone || '';
+            
+            switchTab('dashboard');
+        }
+
+        function deleteRecord(idx) {
+            stateData.splice(idx, 1);
+            saveState();
+            showToast("नोंद हटवण्यात आली!");
+        }
+
+        function clearForm() {
+            document.getElementById('record-form').reset();
+            document.getElementById('edit-index').value = "-1";
+        }
+
+        function resetToSampleData() {
+            stateData = [...INITIAL_DATA];
+            saveState();
+            showToast("नमुना डेटा रीसेट झाला!");
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-cyan-500/20', 'text-cyan-400', 'border', 'border-cyan-500/40');
+                btn.classList.add('text-slate-400');
+            });
+            
+            const targetSection = document.getElementById(`section-${tabId}`);
+            if (targetSection) targetSection.classList.remove('hidden');
+
+            const targetBtn = document.getElementById(`tab-${tabId}`);
+            if (targetBtn) {
+                targetBtn.classList.add('bg-cyan-500/20', 'text-cyan-400', 'border', 'border-cyan-500/40');
+                targetBtn.classList.remove('text-slate-400');
+            }
+
+            if (tabId === 'kml-viewer') {
+                setTimeout(initLeafletMap, 200);
+            }
+        }
+
+        function initLeafletMap() {
+            if (!leafletMap) {
+                leafletMap = L.map('leaflet-map-container').setView([19.1765, 73.0229], 14);
+
+                L.tileLayer('https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}', {
+                    maxZoom: 20,
+                    subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+                    attribution: '&copy; Google Maps Satellite'
+                }).addTo(leafletMap);
+            } else {
+                leafletMap.invalidateSize();
+            }
+        }
+
+        function searchVillageOnMap() {
+            const query = document.getElementById('map-village-search').value.trim();
+            if (!query) {
+                showToast("कृपया गावाचे नाव किंवा ठिकाण टाका!");
+                return;
+            }
+
+            document.getElementById('map-search-status').innerText = `शोधत आहे: ${query}...`;
+
+            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query + ", Maharashtra, India")}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data.length > 0) {
+                        const lat = parseFloat(data[0].lat);
+                        const lon = parseFloat(data[0].lon);
+                        
+                        initLeafletMap();
+                        leafletMap.setView([lat, lon], 15);
+                        
+                        L.marker([lat, lon]).addTo(leafletMap)
+                            .bindPopup(`<b>${query}</b><br>Lat: ${lat}, Lon: ${lon}`)
+                            .openPopup();
+
+                        document.getElementById('map-search-status').innerText = `यशस्वीरीत्या सापडले: ${data[0].display_name}`;
+                        showToast("नकाशा लोकेशन सापडली!");
+                    } else {
+                        document.getElementById('map-search-status').innerText = "काहीही आढळले नाही. कृपया अचूक नाव टाका.";
+                        showToast("लोकेशन सापडली नाही!");
+                    }
+                })
+                .catch(err => {
+                    document.getElementById('map-search-status').innerText = "सर्व्हर एरर आली.";
+                });
+        }
+
+        function loadKMLFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const kmlText = e.target.result;
+                initLeafletMap();
+                
+                try {
+                    const runLayer = omnivore.kml.parse(kmlText);
+                    runLayer.addTo(leafletMap);
+                    
+                    leafletMap.on('ready', function() {
+                        leafletMap.fitBounds(runLayer.getBounds());
+                    });
+
+                    showToast("KML नकाशा सॅटेलाइट मॅपवर यशस्वीरीत्या लोड झाला!");
+                } catch(err) {
+                    showToast("KML फाईल वाचताना त्रुटी आली!");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function loadShapefile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            showToast("Shapefile लोड होत आहे...");
+            initLeafletMap();
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const buffer = e.target.result;
+                shp(buffer).then(function(geojson) {
+                    const shpLayer = L.geoJSON(geojson, {
+                        style: {
+                            color: '#06b6d4',
+                            weight: 3,
+                            fillOpacity: 0.3
+                        }
+                    }).addTo(leafletMap);
+
+                    leafletMap.fitBounds(shpLayer.getBounds());
+                    showToast("Shapefile सॅटेलाइट मॅपवर यशस्वीरीत्या लोड झाली!");
+                }).catch(function(err) {
+                    showToast("Shapefile वाचताना त्रुटी आली! (.zip फाईल असावी)");
+                });
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function applyFilters() {
+            renderData();
+        }
+
+        function changeAdminPassword(e) {
+            e.preventDefault();
+            const p = document.getElementById('admin-new-pass').value.trim();
+            if (p) {
+                localStorage.setItem('admin_pass', p);
+                document.getElementById('admin-new-pass').value = '';
+                showToast("पासवर्ड यशस्वीरीत्या अपडेट केला!");
+            }
+        }
+
+        function triggerExcelImport() {
+            document.getElementById('excel-file-input').click();
+        }
+
+        function handleExcelImport(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                try {
+                    const data = new Uint8Array(evt.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const sheetName = workbook.SheetNames[0];
+                    const json = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+
+                    if (json && json.length > 0) {
+                        json.forEach((row, i) => {
+                            stateData.push({
+                                srNo: row['SrNo'] || stateData.length + 1,
+                                district: row['District'] || 'ठाणे',
+                                taluka: row['Taluka'] || 'कल्याण',
+                                village: row['Village'] || 'उंबर्ली',
+                                surveyNo: row['SurveyNo'] || `10${i}`,
+                                area: (row['Area'] || '1.0').toString(),
+                                holder: row['Holder'] || 'खातेदार नाव',
+                                reference: row['Reference'] || 'REF',
+                                litigation: row['Litigation'] || 'No',
+                                detail712: 'Verified',
+                                ferfar: '-',
+                                zone: '-',
+                                reportKml: 'imported.kml'
+                            });
+                        });
+                        saveState();
+                        showToast("Excel फाईल डेटा इम्पोर्ट झाला!");
+                    }
+                } catch(err) {
+                    showToast("Excel फाईल वाचताना त्रुटी आली!");
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        async function extractSeven12PDF(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            const status = document.getElementById('pdf-import-status');
+            const output = document.getElementById('seven12-extracted-text');
+            output.value = '';
+            if (!window.pdfjsLib) {
+                status.textContent = 'PDF वाचण्याचे लायब्ररी लोड झाले नाही. इंटरनेट तपासा.';
+                return;
+            }
+            try {
+                pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+                status.textContent = 'PDF वाचत आहे...';
+                const buffer = await file.arrayBuffer();
+                const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(buffer) }).promise;
+                let pages = [];
+                for (let pageNo = 1; pageNo <= pdf.numPages; pageNo++) {
+                    const page = await pdf.getPage(pageNo);
+                    const content = await page.getTextContent();
+                    const lines = content.items.map(item => item.str).filter(Boolean);
+                    pages.push('--- Page ' + pageNo + ' ---\n' + lines.join(' '));
+                }
+                output.value = pages.join('\n\n');
+                const extracted = output.value.replace(/--- Page \d+ ---/g, '').trim();
+                if (extracted.length < 20) {
+                    status.textContent = 'Selectable text आढळला नाही. Scanned PDF असल्याने OCR सुरू करत आहे...';
+                    await runSeven12OCR(pdf);
+                } else {
+                    status.textContent = 'यशस्वी: ' + pdf.numPages + ' पानांचा selectable मजकूर मिळाला. आता तपशील तपासा.';
+                    suggestSeven12Fields();
+                }
+            } catch (err) {
+                console.error(err);
+                status.textContent = 'PDF वाचता आली नाही. फाईल योग्य PDF आहे का ते तपासा.';
+            }
+        }
+
+
+        async function runSeven12OCR(existingPdf = null) {
+            const file = document.getElementById('seven12-pdf-file').files[0];
+            const status = document.getElementById('pdf-import-status');
+            const output = document.getElementById('seven12-extracted-text');
+            const button = document.getElementById('seven12-ocr-btn');
+            if (!file && !existingPdf) { showToast('प्रथम स्कॅन केलेली 7/12 PDF निवडा.'); return; }
+            if (!window.Tesseract || !window.pdfjsLib) {
+                status.textContent = 'OCR/PDF लायब्ररी लोड झाली नाही. इंटरनेट कनेक्शन तपासा.';
+                return;
+            }
+            button.disabled = true;
+            button.classList.add('opacity-50');
+            let worker;
+            try {
+                pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+                let pdf = existingPdf;
+                if (!pdf) {
+                    const buffer = await file.arrayBuffer();
+                    pdf = await pdfjsLib.getDocument({ data: new Uint8Array(buffer) }).promise;
+                }
+                status.textContent = 'OCR engine सुरू होत आहे (मराठी + इंग्रजी)...';
+                worker = await Tesseract.createWorker('mar+eng', 1, {
+                    logger: m => {
+                        if (m.status === 'recognizing text') status.textContent = 'OCR सुरू: ' + Math.round((m.progress || 0) * 100) + '%';
+                        else if (m.status) status.textContent = 'OCR: ' + m.status;
+                    }
+                });
+                const ocrPages = [];
+                for (let pageNo = 1; pageNo <= pdf.numPages; pageNo++) {
+                    status.textContent = 'OCR पान ' + pageNo + ' / ' + pdf.numPages + ' वाचत आहे...';
+                    const page = await pdf.getPage(pageNo);
+                    const viewport = page.getViewport({ scale: 2.2 });
+                    const canvas = document.createElement('canvas');
+                    canvas.width = Math.ceil(viewport.width);
+                    canvas.height = Math.ceil(viewport.height);
+                    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+                    await page.render({ canvasContext: ctx, viewport }).promise;
+                    const result = await worker.recognize(canvas);
+                    ocrPages.push('--- OCR Page ' + pageNo + ' ---\n' + (result.data.text || '').trim());
+                    canvas.width = 0; canvas.height = 0;
+                }
+                output.value = ocrPages.join('\n\n');
+                status.textContent = 'OCR पूर्ण: ' + pdf.numPages + ' पानांचा मजकूर मिळाला. कृपया मूळ 7/12 शी पडताळा.';
+                suggestSeven12Fields();
+            } catch (err) {
+                console.error(err);
+                status.textContent = 'OCR अयशस्वी. इंटरनेट, PDF गुणवत्ता आणि भाषा पॅक तपासा.';
+            } finally {
+                if (worker) await worker.terminate();
+                button.disabled = false;
+                button.classList.remove('opacity-50');
+            }
+        }
+
+        function suggestSeven12Fields() {
+            const text = document.getElementById('seven12-extracted-text').value || '';
+            if (!text.trim()) { showToast('प्रथम PDF अपलोड करा किंवा मजकूर पेस्ट करा.'); return; }
+            // Extract only values explicitly labelled in the PDF/OCR text; OCR values must be verified.
+            const patterns = {
+                district: /(?:जिल्हा|District)\s*[:：-]?\s*([^\n,;]+)/i,
+                taluka: /(?:तालुका|तहसील|Taluka|Tehsil)\s*[:：-]?\s*([^\n,;]+)/i,
+                village: /(?:गावाचे\s*नाव|गाव|मौजे|Village|Mouje)\s*[:：-]?\s*([^\n,;]+)/i,
+                survey: /(?:गट\s*(?:नं|क्रमांक)?|सर्वे\s*(?:नं|नंबर)?|Survey\s*No\.?|Gat\s*No\.?)\s*[:：-]?\s*([0-9०-९]+(?:\s*[\/\-][\sA-Za-zअ-ह०-९]+)*)/i,
+                area: /(?:एकूण\s*क्षेत्र|क्षेत्रफळ|क्षेत्र|Area)\s*[:：-]?\s*([0-9०-९]+(?:[.,][0-9०-९]+)?)/i,
+                holder: /(?:खातेदार(?:ाचे)?\s*नाव|धारकाचे\s*नाव|भोगवटादार(?:ाचे)?\s*नाव|Occupant(?:\s*Name)?|Holder\s*Name)\s*[:：-]?\s*([^\n]+)/i,
+                ferfar: /(?:फेरफार\s*(?:क्र|क्रमांक)?|Mutation\s*No\.?)\s*[:：-]?\s*([0-9०-९]+)/i
+            };
+            const map = [
+                ['district','pdf-district'], ['taluka','pdf-taluka'], ['village','pdf-village'],
+                ['survey','pdf-surveyno'], ['area','pdf-area'], ['holder','pdf-holder'], ['ferfar','pdf-ferfar']
+            ];
+            map.forEach(([key,id]) => {
+                const match = text.match(patterns[key]);
+                const el = document.getElementById(id);
+                if (match && el && !el.value.trim()) el.value = match[1].trim().replace(/[|]+$/,'');
+            });
+            const surveyNo = document.getElementById('pdf-surveyno').value.trim();
+            const area = document.getElementById('pdf-area').value.trim();
+            const holder = document.getElementById('pdf-holder').value.trim();
+            showToast('PDF/OCR मधून उपलब्ध तपशील फॉर्ममध्ये भरले.');
+            // Feed the Master Table automatically when the three essential fields are detected.
+            // Other fields remain blank if the PDF does not explicitly identify them.
+            if (surveyNo && area && holder) {
+                const fingerprint = text.trim().slice(0, 5000);
+                if (fingerprint !== lastAutoImported712Text) {
+                    lastAutoImported712Text = fingerprint;
+                    importSeven12Record(true);
+                }
+            } else {
+                const missing = [!surveyNo && 'गट/सर्वे नंबर', !area && 'क्षेत्र', !holder && 'खातेदाराचे नाव'].filter(Boolean);
+                const status = document.getElementById('pdf-import-status');
+                status.textContent = 'Master Table auto-entry साठी अजून आवश्यक तपशील: ' + missing.join(', ') + '. उपलब्ध माहिती फॉर्ममध्ये भरली आहे.';
+            }
+        }
+
+        function importSeven12Record(auto = false) {
+            const surveyNo = document.getElementById('pdf-surveyno').value.trim();
+            const area = document.getElementById('pdf-area').value.trim();
+            const holder = document.getElementById('pdf-holder').value.trim();
+            if (!surveyNo || !area || !holder) {
+                showToast('Master Table auto-entry साठी गट/सर्वे नंबर, क्षेत्र आणि खातेदाराचे नाव आवश्यक आहे.');
+                return;
+            }
+            const duplicate = stateData.some(r => String(r.surveyNo || '').trim() === surveyNo && String(r.village || '').trim() === document.getElementById('pdf-village').value.trim() && String(r.holder || '').trim() === holder);
+            if (duplicate) {
+                if (!auto) showToast('हीच गट नंबर, गाव आणि खातेदाराची नोंद Master Table मध्ये आधीपासून आहे.');
+                return;
+            }
+            stateData.push({
+                srNo: stateData.length + 1,
+                district: document.getElementById('pdf-district').value.trim(),
+                taluka: document.getElementById('pdf-taluka').value.trim(),
+                village: document.getElementById('pdf-village').value.trim(),
+                surveyNo, area, holder,
+                reference: '7/12 PDF/OCR Auto Import',
+                litigation: 'No',
+                detail712: document.getElementById('pdf-status').value.trim() || 'PDF/OCR Imported - Verify',
+                ferfar: document.getElementById('pdf-ferfar').value.trim(),
+                zone: '',
+                reportKml: 'Not Available'
+            });
+            saveState();
+            if (auto) {
+                document.getElementById('pdf-import-status').textContent = 'नोंद आपोआप Master Table मध्ये जोडली. OCR तपशील मूळ 7/12 शी पडताळा.';
+                showToast('7/12 तपशील आपोआप Master Table मध्ये जोडले!');
+            } else {
+                showToast('7/12 मधील नोंद Master Table मध्ये Import झाली.');
+                switchTab('input-table');
+            }
+        }
+
+        function clearSeven12Import() {
+            ['seven12-pdf-file','seven12-extracted-text','pdf-district','pdf-taluka','pdf-village','pdf-surveyno','pdf-area','pdf-holder','pdf-ferfar'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = '';
+            });
+            document.getElementById('pdf-status').value = 'PDF Imported - Verify';
+            document.getElementById('pdf-import-status').textContent = 'PDF निवडलेली नाही.';
+        }
+
+        function exportDataCSV() {
+            let csvContent = "data:text/csv;charset=utf-8,SrNo,District,Taluka,Village,SurveyNo,Area,Holder,Litigation\n";
+            stateData.forEach(row => {
+                csvContent += `${row.srNo},${row.district},${row.taluka},${row.village},${row.surveyNo},${row.area},"${row.holder}",${row.litigation}\n`;
+            });
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "Land_Records_Export.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast("CSV फाईल एक्सपोर्ट झाली!");
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            document.getElementById('toast-message').innerText = msg;
+            t.classList.remove('opacity-0', 'pointer-events-none');
+            t.classList.add('opacity-100');
+            setTimeout(() => {
+                t.classList.remove('opacity-100');
+                t.classList.add('opacity-0', 'pointer-events-none');
+            }, 3000);
+        }
+
+        window.onload = () => {
+            checkAuth();
+        };
+    </script>
+</body>
+</html>
